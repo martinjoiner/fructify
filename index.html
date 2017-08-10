@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Fructify</title>
+
+    <style type="text/css">
+        #received {
+            font-size: 6em;
+            width: 100%;
+            text-align: center;
+        }
+
+        #canvas {
+            display: flex;
+            flex-direction: column;   
+            width: 100%;
+            border-left: 1px solid grey;
+            border-top: 1px solid grey;
+        }
+
+        #canvas .row {
+            display: flex;
+        } 
+
+        #canvas i {
+            display: block;
+            flex-grow: 1;
+            width: 10px;
+            height: 10px;
+            border-right: 1px solid grey;
+            border-bottom: 1px solid grey;
+        }
+
+        #canvas i.on {
+            background-color: #333;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div id="received">
+    </div>
+
+    <div id="canvas">
+        <!--
+        <div class="row">
+            <i></i>
+        </div>
+        -->
+    </div>
+
+    <!-- <input type="color" id="colorPicker"> -->
+
+    <input id="message">
+
+    <script type="text/javascript">
+
+        webSocketConnect = (function() {
+            if ("WebSocket" in window) {
+                console.log("WebSocket is supported by your Browser!");
+           
+                // Let us open a web socket
+                window.ws = new WebSocket("ws://192.168.0.24:8001");
+
+                window.ws.onopen = function () {
+                    // Web Socket is connected, send data using send()
+                    //window.ws.send("Message to send");
+                    //alert("Message is sent...");
+                }
+
+                window.ws.onmessage = function (evt) { 
+                    var received_msg = evt.data;
+                    console.log( "Message is received: \"" + received_msg + '"' );
+                    //document.getElementById('received').innerHTML = received_msg;
+                    receiveCavasColors( received_msg );
+                }
+
+                window.ws.onclose = function () { 
+                    // websocket is closed.
+                    console.log("Connection is closed..."); 
+                }
+
+            } else {
+                // The browser doesn't support WebSocket
+                alert("WebSocket NOT supported by your Browser!");
+            }
+        })();
+
+        function processInput(){
+            //console.log( this.value );
+            //window.ws.send(this.value);
+        }
+
+        function colorPixel( pixel ){
+            console.log( pixel.className );
+            if( pixel.className == 'on' ){
+                pixel.className = '';
+            } else {
+                pixel.className = 'on';
+            }
+            sendCanvasColors();
+            //console.log(pixel);
+            //console.log( document.getElementById('colorPicker').value );
+            //pixel.style.background = document.getElementById('colorPicker').value;
+        }
+
+        function sendCanvasColors(){
+            var pixels = document.getElementsByTagName('i');
+            var pixelString = '';
+            for( var i in pixels ){
+                if( pixels[i].className == 'on' ){
+                    pixelString += '1';
+                } else {
+                    pixelString += '0';
+                }
+            }
+            console.log(pixelString);
+            window.ws.send(pixelString);
+        }
+
+        function receiveCavasColors( pixelString ){
+            var pixels = document.getElementsByTagName('i');
+            for( var i in pixelString ){
+                if( pixelString[i] == '1' ){
+                    pixels[i].className = 'on';
+                } else {
+                    pixels[i].className = '';
+                }
+            }
+        }
+
+        document.getElementById('message').addEventListener('keyup', processInput, false );
+
+        document.onunload = function(){ window.ws.close() };
+
+        canvas = document.getElementById('canvas'); 
+
+        for( var r = 0; r < 50; r++ ){
+            row = document.createElement('div');
+            canvas.appendChild(row);
+            row.className = 'row';
+            for( var col = 0; col < 70; col++ ){
+                i = document.createElement('i');
+                row.appendChild(i);
+                //console.log( pixels[i] );
+                i.addEventListener('mouseup', function(){ colorPixel(this) }, false );
+            }
+        }
+
+    </script>
+  
+</body>
+</html>
