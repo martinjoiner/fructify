@@ -1,0 +1,35 @@
+
+body {
+    text-align: center;
+    font-family: sans-serif;
+}
+
+#received {
+    font-size: 6em;
+    width: 100%;
+    text-align: center;
+}
+
+#canvas {
+    display: grid;
+    grid-template-columns: repeat( 70, 10px);
+
+    width: 700px;
+    border: 1px solid grey;
+    margin: 0 auto 0 auto;
+}
+
+#canvas i {
+    display: block;
+
+    width: 10px;
+    height: 10px;
+    border-right: 1px solid #DDD;
+    border-bottom: 1px solid #DDD;
+
+    transition: background-color .2s;
+}
+
+#canvas i.on {
+    background-color: #333;
+}

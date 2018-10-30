@@ -3,56 +3,20 @@
 <head>
     <title>Fructify</title>
 
-    <style type="text/css">
-        #received {
-            font-size: 6em;
-            width: 100%;
-            text-align: center;
-        }
-
-        #canvas {
-            display: flex;
-            flex-direction: column;   
-            width: 100%;
-            border-left: 1px solid grey;
-            border-top: 1px solid grey;
-        }
-
-        #canvas .row {
-            display: flex;
-        } 
-
-        #canvas i {
-            display: block;
-            flex-grow: 1;
-            width: 10px;
-            height: 10px;
-            border-right: 1px solid grey;
-            border-bottom: 1px solid grey;
-        }
-
-        #canvas i.on {
-            background-color: #333;
-        }
-
-    </style>
+    <link href="style.css" rel="stylesheet">
 </head>
 <body>
 
-    <div id="received">
-    </div>
+    <p>Click on a pixel to change it's colour.</p>
 
     <div id="canvas">
         <!--
-        <div class="row">
-            <i></i>
-        </div>
+        <i></i>
         -->
     </div>
 
-    <!-- <input type="color" id="colorPicker"> -->
+    <p><span id="connection-count">0</span> artists painting</p>
 
-    <input id="message">
 
     <script type="text/javascript">
 
@@ -61,20 +25,29 @@
                 console.log("WebSocket is supported by your Browser!");
            
                 // Let us open a web socket
-                window.ws = new WebSocket("ws://192.168.0.24:8001");
+                window.ws = new WebSocket("ws://192.168.2.99:8002");
 
                 window.ws.onopen = function () {
                     // Web Socket is connected, send data using send()
                     //window.ws.send("Message to send");
-                    //alert("Message is sent...");
-                }
+                    console.log("Connection established...");
+                };
 
                 window.ws.onmessage = function (evt) { 
                     var received_msg = evt.data;
-                    console.log( "Message is received: \"" + received_msg + '"' );
-                    //document.getElementById('received').innerHTML = received_msg;
-                    receiveCavasColors( received_msg );
-                }
+
+                    var data = JSON.parse(received_msg);
+
+                    if (data.action == 'render-canvas') {
+                        renderWholeCanvas( data.pixelString );
+                    }
+
+                    if (typeof data.connectionCount !== 'undefined') {
+                        document.getElementById('connection-count').innerHTML = data.connectionCount;
+                    }
+
+
+                };
 
                 window.ws.onclose = function () { 
                     // websocket is closed.
@@ -92,36 +65,59 @@
             //window.ws.send(this.value);
         }
 
-        function colorPixel( pixel ){
-            console.log( pixel.className );
+        function colorPixel( pixel ) {
+            console.log('Setting pixel ' + pixel.dataset.index);
             if( pixel.className == 'on' ){
                 pixel.className = '';
             } else {
                 pixel.className = 'on';
             }
-            sendCanvasColors();
-            //console.log(pixel);
-            //console.log( document.getElementById('colorPicker').value );
-            //pixel.style.background = document.getElementById('colorPicker').value;
+            sendPixelColor(pixel);
         }
 
+
+        /**
+         * Sends the state of 1 single pixel to a server
+         */
+        function sendPixelColor(pixel) {
+            var data = {
+                action: 'set-pixel',
+                index: pixel.dataset.index,
+                value: 0
+            };
+
+            if (pixel.className === 'on') {
+                data.value = 1;
+            }
+
+            var json = JSON.stringify(data);
+
+            window.ws.send(json);
+        }
+
+
+        /**
+         * Communicates the state of every pixel on the whole canvas to the WS server
+         */
         function sendCanvasColors(){
             var pixels = document.getElementsByTagName('i');
+
             var pixelString = '';
-            for( var i in pixels ){
+            for (var i = 0, iLimit = pixels.length; i < iLimit; i++) {
                 if( pixels[i].className == 'on' ){
                     pixelString += '1';
                 } else {
                     pixelString += '0';
                 }
             }
-            console.log(pixelString);
+            // console.log(pixelString);
             window.ws.send(pixelString);
         }
 
-        function receiveCavasColors( pixelString ){
+        function renderWholeCanvas( pixelString ){
+            console.log('Rendering whole canvas');
             var pixels = document.getElementsByTagName('i');
-            for( var i in pixelString ){
+            for( var i = 0, iLimit = pixelString.length; i < iLimit; i++ ){
                 if( pixelString[i] == '1' ){
                     pixels[i].className = 'on';
                 } else {
@@ -130,23 +126,39 @@
             }
         }
 
-        document.getElementById('message').addEventListener('keyup', processInput, false );
+        //document.getElementById('message').addEventListener('keyup', processInput, false );
 
         document.onunload = function(){ window.ws.close() };
 
-        canvas = document.getElementById('canvas'); 
+        canvas = document.getElementById('canvas');
 
-        for( var r = 0; r < 50; r++ ){
-            row = document.createElement('div');
-            canvas.appendChild(row);
-            row.className = 'row';
-            for( var col = 0; col < 70; col++ ){
-                i = document.createElement('i');
-                row.appendChild(i);
-                //console.log( pixels[i] );
-                i.addEventListener('mouseup', function(){ colorPixel(this) }, false );
+        function populateCanvas(rowCount, colCount) {
+
+            var pixelsCreatedCount = 0;
+            var i;
+
+            for (var r = 0; r < rowCount; r++) {
+                //row = document.createElement('div');
+                //canvas.appendChild(row);
+                //row.className = 'row';
+                for (var col = 0; col < colCount; col++) {
+                    i = document.createElement('i');
+                    i.dataset.index = pixelsCreatedCount;
+                    canvas.appendChild(i);
+                    i.addEventListener('mouseup', function () {
+                        colorPixel(this)
+                    }, false);
+                    pixelsCreatedCount++;
+                }
             }
+
+            console.log('Populated ' + pixelsCreatedCount + ' pixels');
         }
+
+        var rowCount = 50;
+        var colCount = 70;
+
+        populateCanvas(rowCount, colCount);
 
     </script>
   
