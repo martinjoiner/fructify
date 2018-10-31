@@ -1,7 +1,7 @@
 
+var config = require('./config.json');
 var ws = require("nodejs-websocket");
 var fs = require('fs');
-
 
 function padStringRight(string, length, char) {
 
@@ -23,7 +23,7 @@ Service = function(){
 
     this.connections = [];
 
-    this.pixelCount = 3500;
+    this.pixelCount = config.canvas.rows * config.canvas.cols;
 
     // A 3500 character long string of zeros and ones that represent pixels on canvas (1 = coloured, 0 = transparent)
     this.pixelString = padStringRight( fs.readFileSync(fileName).toString(), this.pixelCount, '0');

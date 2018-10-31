@@ -1,24 +1,56 @@
-<!DOCTYPE html>
+<?php
+
+    $jsonConfig = file_get_contents('config.json');
+
+    $config = json_decode($jsonConfig, true);
+
+?><!DOCTYPE html>
 <html>
 <head>
     <title>Fructify</title>
 
     <link href="style.css" rel="stylesheet">
+
+    <style type="text/css">
+        #canvas {
+            grid-template-columns: repeat(<?=$config['canvas']['cols']?>, 10px);
+            width: <?=$config['canvas']['cols'] * 10?>px
+        }
+    </style>
 </head>
 <body>
 
     <p>Click on a pixel to change it's colour.</p>
 
-    <div id="canvas">
+    <div id="canvas" data-rows="<?=$config['canvas']['rows']?>" data-cols="<?=$config['canvas']['cols']?>">
         <!--
         <i></i>
         -->
     </div>
 
-    <p><span id="connection-count">0</span> artists painting</p>
+    <div id="color-picker">
+        <i class="a"></i>
+        <i class="b"></i>
+        <i class="c"></i>
+        <i class="d"></i>
+        <i class="e"></i>
+        <i class="f"></i>
+        <i class="g"></i>
+        <i class="h"></i>
+        <i class="i"></i>
+        <i class="j"></i>
+        <i class="k"></i>
+        <i class="l"></i>
+        <i class="m"></i>
+    </div>
+
+    <div id="artists"><span id="connection-count">0</span> artists painting</div>
 
 
     <script type="text/javascript">
+
+        // Global variable for currently selected color
+        window.currentColor = 'a';
 
         webSocketConnect = (function() {
             if ("WebSocket" in window) {
@@ -29,7 +61,6 @@
 
                 window.ws.onopen = function () {
                     // Web Socket is connected, send data using send()
-                    //window.ws.send("Message to send");
                     console.log("Connection established...");
                 };
 
@@ -60,35 +91,29 @@
             }
         })();
 
-        function processInput(){
-            //console.log( this.value );
-            //window.ws.send(this.value);
-        }
 
-        function colorPixel( pixel ) {
-            console.log('Setting pixel ' + pixel.dataset.index);
-            if( pixel.className == 'on' ){
-                pixel.className = '';
-            } else {
-                pixel.className = 'on';
-            }
+        /**
+         * Sets the color of a pixel
+         * @param DomElement pixel
+         * @param string colorClass - Must be a single char
+         */
+        function colorPixel( pixel, colorClass ) {
+            console.log('Setting pixel ' + pixel.dataset.index + ' to ' + colorClass);
+            pixel.className = colorClass;
             sendPixelColor(pixel);
         }
 
 
         /**
          * Sends the state of 1 single pixel to a server
+         * @param DOM Element pixel
          */
         function sendPixelColor(pixel) {
             var data = {
                 action: 'set-pixel',
                 index: pixel.dataset.index,
-                value: 0
+                value: pixel.className
             };
-
-            if (pixel.className === 'on') {
-                data.value = 1;
-            }
 
             var json = JSON.stringify(data);
 
@@ -96,37 +121,14 @@
         }
 
 
-        /**
-         * Communicates the state of every pixel on the whole canvas to the WS server
-         */
-        function sendCanvasColors(){
-            var pixels = document.getElementsByTagName('i');
-
-            var pixelString = '';
-            for (var i = 0, iLimit = pixels.length; i < iLimit; i++) {
-                if( pixels[i].className == 'on' ){
-                    pixelString += '1';
-                } else {
-                    pixelString += '0';
-                }
-            }
-            // console.log(pixelString);
-            window.ws.send(pixelString);
-        }
-
         function renderWholeCanvas( pixelString ){
             console.log('Rendering whole canvas');
-            var pixels = document.getElementsByTagName('i');
+            var pixels = canvas.getElementsByTagName('i');
+
             for( var i = 0, iLimit = pixelString.length; i < iLimit; i++ ){
-                if( pixelString[i] == '1' ){
-                    pixels[i].className = 'on';
-                } else {
-                    pixels[i].className = '';
-                }
+                pixels[i].className = pixelString[i];
             }
         }
-
-        //document.getElementById('message').addEventListener('keyup', processInput, false );
 
         document.onunload = function(){ window.ws.close() };
 
@@ -138,16 +140,20 @@
             var i;
 
             for (var r = 0; r < rowCount; r++) {
-                //row = document.createElement('div');
-                //canvas.appendChild(row);
-                //row.className = 'row';
                 for (var col = 0; col < colCount; col++) {
                     i = document.createElement('i');
                     i.dataset.index = pixelsCreatedCount;
                     canvas.appendChild(i);
-                    i.addEventListener('mouseup', function () {
-                        colorPixel(this)
+                    i.addEventListener('click', function () {
+                        colorPixel(this, window.currentColor)
                     }, false);
+
+                    i.addEventListener('contextmenu', function (ev) {
+                        ev.preventDefault();
+                        colorPixel(this, 'e');
+                        return false;
+                    }, false);
+
                     pixelsCreatedCount++;
                 }
             }
@@ -155,10 +161,20 @@
             console.log('Populated ' + pixelsCreatedCount + ' pixels');
         }
 
-        var rowCount = 50;
-        var colCount = 70;
+        var rowCount = canvas.dataset.rows;
+        var colCount = canvas.dataset.cols;
 
         populateCanvas(rowCount, colCount);
+
+        var colorPicker = document.getElementById('color-picker');
+
+        var cols = colorPicker.getElementsByTagName('i');
+
+        for (var i = 0, iLimit = cols.length; i < iLimit; i++) {
+            cols[i].addEventListener('mouseup', function () {
+                window.currentColor = this.className;
+            });
+        }
 
     </script>
   

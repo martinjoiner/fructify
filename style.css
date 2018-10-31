@@ -4,17 +4,14 @@ body {
     font-family: sans-serif;
 }
 
-#received {
-    font-size: 6em;
-    width: 100%;
-    text-align: center;
+#artists {
+    width: 500px;
+    margin: 0 auto 1em auto;
+    clear: left;
 }
 
 #canvas {
     display: grid;
-    grid-template-columns: repeat( 70, 10px);
-
-    width: 700px;
     border: 1px solid grey;
     margin: 0 auto 0 auto;
 }
@@ -22,14 +19,94 @@ body {
 #canvas i {
     display: block;
 
-    width: 10px;
-    height: 10px;
+    width: 9px;
+    height: 9px;
     border-right: 1px solid #DDD;
     border-bottom: 1px solid #DDD;
 
     transition: background-color .2s;
 }
 
-#canvas i.on {
+#color-picker {
+    width: 286px;
+    height: 22px;
+    margin: 0 auto 1em auto;
+}
+
+#color-picker i {
+    display: block;
+    float: left;
+    width: 20px;
+    height: 20px;
+    border: 1px solid #222;
+}
+
+#color-picker i:hover {
+    border-color: #999;
+    cursor: context-menu;
+}
+
+#canvas i.a,
+#color-picker i.a {
     background-color: #333;
+}
+
+#canvas i.b,
+#color-picker i.b {
+    background-color: #666;
+}
+
+#canvas i.c,
+#color-picker i.c {
+    background-color: #999;
+}
+
+#canvas i.d,
+#color-picker i.d {
+    background-color: #CCC;
+}
+
+#canvas i.e,
+#color-picker i.e {
+    background-color: #FFF;
+}
+
+#canvas i.f,
+#color-picker i.f {
+    background-color: #009688;
+}
+
+#canvas i.g,
+#color-picker i.g {
+    background-color: #1dc1b2;
+}
+
+#canvas i.h,
+#color-picker i.h {
+    background-color: #50d2c6;
+}
+
+#canvas i.i,
+#color-picker i.i {
+    background-color: #9ef1e9;
+}
+
+#canvas i.j,
+#color-picker i.j {
+    background-color: #50085d;
+}
+
+#canvas i.k,
+#color-picker i.k {
+    background-color: #892a9a;
+}
+
+#canvas i.l,
+#color-picker i.l {
+    background-color: #ce78de;
+}
+
+#canvas i.m,
+#color-picker i.m {
+    background-color: #f8d2ff;
 }
