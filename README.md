@@ -9,11 +9,12 @@ A browser-based collaborative drawing game played over a network.
 
 - Clone repo down
 - Run `npm install`
+- Copy and rename _config.json.example_ to _config.json_
 
 
 ## Running the servers
 
-For this to work there needs to be 2 services running, a normal web server listening on http:// and a websocket server listening on ws://
+For this to work there needs to be 2 services running, a normal web server listening on http:// and a WebSocket server listening on ws://
 
 
 Run a normal web server over http:// with something like this...
@@ -27,5 +28,5 @@ Run the WebSockets server with something like this...
 node index.js
 ```
 
-Obviously those IP addresses above will change dependant on your machine. 
-You may need to tweak the JavaScript that the browser uses to connect to the WebSocket.
+Obviously the IP address will vary dependant on your machine's network. 
+Be sure to set "domain" in _config.json_

@@ -19,6 +19,8 @@ Service = function(){
 
     var fileName = 'pixelString.txt';
 
+    this.saveInProgress = false;
+
     var pixelsUntilNextSave = 30;
 
     this.connections = [];
@@ -31,7 +33,7 @@ Service = function(){
 
 
 
-    this.addConnection = function( conn ){
+    this.addConnection = function( conn ) {
         this.connections.push( conn );
         this.logConnections();
 
@@ -65,7 +67,7 @@ Service = function(){
     this.setPixel = function (index, value) {
 
         console.log('Setting pixel ' + index + ' to ' + value);
-        this.pixelString = this.pixelString.substr(0, index) + value + this.pixelString.substr(index + 1);
+        this.pixelString = this.pixelString.substr(0, index) + value.substr(0,1) + this.pixelString.substr(index + 1);
 
         if (pixelsUntilNextSave-- < 1) {
             this.saveCanvas();
@@ -110,8 +112,17 @@ Service = function(){
 
 
     this.saveCanvas = function () {
-        fs.writeFile(fileName, this.pixelString, function() {
+
+        if (this.saveInProgress) {
+            console.log('Save in progress, skipping save');
+            return false;
+        }
+
+        this.saveInProgress = true;
+
+        fs.writeFile(fileName, this.pixelString, function(err) {
             console.log("The file was saved!");
+            service.saveInProgress = false;
         });
     };
 
@@ -122,15 +133,30 @@ var service = new Service();
 var server = ws.createServer(function (conn) {
 
     console.log("New connection");
+    // Attach 2 variables for use in rate limiting
+    conn.lastMessageTime = Date.now();
+    conn.foulCount = 0;
     service.addConnection( conn );
 
     conn.on("text", function (str) {
+
+        // Minimum number of Milliseconds between messages
+        var timeBetweenMessagesLimit = 200;
+
+        var now = Date.now();
+        var previousLastMessageTime = this.lastMessageTime;
+
+        this.lastMessageTime = now;
+
+        if (now - previousLastMessageTime < timeBetweenMessagesLimit) {
+            this.foulCount++;
+            return false;
+        }
 
         var data = JSON.parse(str);
 
         if (data.action === 'set-pixel') {
             service.setPixel(parseInt(data.index), data.value);
-
         }
     });
 
@@ -144,4 +170,4 @@ var server = ws.createServer(function (conn) {
         console.log(err.stack);
     });
 
-}).listen(8002);
+}).listen(config.websocket_port);

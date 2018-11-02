@@ -1,0 +1,8 @@
+{
+  "domain": "192.168.2.99",
+  "websocket_port": "8002",
+  "canvas": {
+    "cols": 90,
+    "rows": 60
+  }
+}

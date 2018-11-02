@@ -49,6 +49,8 @@
 
     <script type="text/javascript">
 
+        webSocketAddress = "ws://" + window.location.hostname + ":<?=$config['websocket_port']?>";
+
         // Global variable for currently selected color
         window.currentColor = 'a';
 
@@ -57,7 +59,7 @@
                 console.log("WebSocket is supported by your Browser!");
            
                 // Let us open a web socket
-                window.ws = new WebSocket("ws://192.168.2.99:8002");
+                window.ws = new WebSocket(webSocketAddress);
 
                 window.ws.onopen = function () {
                     // Web Socket is connected, send data using send()
